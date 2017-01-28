@@ -1,6 +1,6 @@
 Stratafy <- function(data,size,replace,column){
   
-  # data = Train_int
+  # data = Train
   # size = 200
   # replace = TRUE
   # column = "Survived"
@@ -8,10 +8,10 @@ Stratafy <- function(data,size,replace,column){
   
   levels_data_1 <- levels(data[,column])[1]
   levels_data_2 <- levels(data[,column])[2]
-  iter = as.integer((level1_prop*size))
   
   level1_prop <- table(data[,column])[1]/length(data[,column])
   level2_prop <- table(data[,column])[2]/length(data[,column])
+  iter = as.integer((level1_prop*size))
   data_sorted <- data[order(data[,column]),]
   level1_data <- data_sorted[data_sorted[,column] == levels_data_1,]
   level2_data <- data_sorted[data_sorted[,column] == levels_data_2,]
@@ -83,10 +83,17 @@ Stratafy <- function(data,size,replace,column){
     }
 
   }
+  
   Strata_final_data = rbind(level1_data_strat,level2_data_strat)
+  Train_remain = Train
+    
+    for(f in 1:dim(Strata_final_data)[1]){
+      Train_remain = Train_remain[-Strata_final_data$PassengerId[i],]
+    }
+  data_full = list(Train_remain,Strata_final_data)
+
   dimm = dim(Strata_final_data)
-  return(Strata_final_data)
-  return(dimm)
+  return(data_full)
   level1_data_strat = NULL
   level2_data_strat = NULL
   level2_data = NULL
