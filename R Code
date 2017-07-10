@@ -1,101 +1,51 @@
-Stratafy <- function(data,size,replace,column){
+Stratfy <- function(data,size,replace,Target){
+  # data = Train_hat_final
+  # size = 470000
+  # replace = F
+  # Target = "outcome"
   
-  # data = Train
-  # size = 200
-  # replace = TRUE
-  # column = "Survived"
+  data = as.data.frame(data)
+  
+  data_sorted <- data[order(data[,Target]),]
+  data_sorted["uniqid"] = row.names(data_sorted)
+  
+  data_sorted = data_sorted[,c(Target,"uniqid")]
+  
+  levels_data_1 <- levels(data_sorted[,Target])[1]
+  levels_data_2 <- levels(data_sorted[,Target])[2]
+  
+  level1_prop <- table(data_sorted[,Target])[1]/length(data_sorted[,Target])
+  level2_prop <- table(data_sorted[,Target])[2]/length(data_sorted[,Target])
+  
+  level1_data <- data_sorted[data_sorted[,Target] == levels_data_1,]
+  level2_data <- data_sorted[data_sorted[,Target] == levels_data_2,]
+  
+  size1 = level1_prop*size
+  size2 = level2_prop*size
+  
+  sample_1 = sample(nrow(level1_data),size = size1,replace = replace)
+  level1_data_sample = level1_data[sample_1,]
+  level1_data_left = level1_data[-sample_1,]
+  sample_2 = sample(nrow(level2_data),size = size2,replace = replace)
+  level2_data_sample = level2_data[sample_2,]
+  level2_data_left = level2_data[-sample_2,]
   
   
-  levels_data_1 <- levels(data[,column])[1]
-  levels_data_2 <- levels(data[,column])[2]
+  Indexes_left = rbind(level1_data_left,level2_data_left)
+  Indexes_sample = rbind(level1_data_sample,level2_data_sample)
   
-  level1_prop <- table(data[,column])[1]/length(data[,column])
-  level2_prop <- table(data[,column])[2]/length(data[,column])
-  iter = as.integer((level1_prop*size))
-  data_sorted <- data[order(data[,column]),]
-  level1_data <- data_sorted[data_sorted[,column] == levels_data_1,]
-  level2_data <- data_sorted[data_sorted[,column] == levels_data_2,]
-  full_level1_data = level1_data
-  full_level2_data = level2_data
-  level1_data_strat = matrix(0,nrow =  0,ncol =  dim(level1_data)[2])
-  level2_data_strat = matrix(0,nrow =  0,ncol =  dim(level1_data)[2])
-  level1_data_strat = as.data.frame(level1_data_strat)
-  level2_data_strat = as.data.frame(level2_data_strat)
-  names(level1_data_strat) = names(level1_data)
-  names(level2_data_strat) = names(level2_data) 
-  set.seed(100)
-  rand1 = 0
-  rand2 = 0
-  rand3 = 0
-  rand4 = 0
-  rand_temp1 = rep(x = 0,times = iter)
-  rand_temp2 = rep(x = 0,times = size - iter)
-  newsize = size - iter
-  if(replace == TRUE){
-    for(i in 1:iter){
-      rand1 = as.integer(runif(n = 1,min = 1,max = dim(level1_data)[1]))
-      level1_data_strat = rbind(level1_data_strat,level1_data[rand1,])
-      
-    }
-    for(j in 1:(size-iter)){
-      rand2 = as.integer(runif(n = 1,min = 1,max = dim(level2_data)[1]))
-      level2_data_strat = rbind(level2_data_strat,level2_data[rand2,])
-    }
-  }
-  if(replace == FALSE){
-    for(k in 1:iter){
-      if(rand3 == 0){
-      rand3 = as.integer(runif(n = 1,min = 1,max = dim(level1_data)[1]))
-      level1_data_strat = rbind(level1_data_strat,level1_data[rand3,])
-      level1_data = level1_data[-rand3,]
-      rand_temp1[k] = rand3
-      }
-      else{
-        
-        while(rand3 %in% rand_temp1){
-          rand3 = as.integer(runif(n = 1,min = 1,max = dim(level1_data)[1]))
-          rand3 = rand3
-        }
-        
-        level1_data_strat = rbind(level1_data_strat,level1_data[rand3,])
-        level1_data = level1_data[-rand3,]
-        rand_temp1[k] = rand3
-      }
-    }
-    for(l in 1:newsize){
-      if(rand4 == 0){
-        rand4 = as.integer(runif(n = 1,min = 1,max = dim(level2_data)[1]))
-        level2_data_strat = rbind(level2_data_strat,level2_data[rand4,])
-        level2_data = level2_data[-rand4,]
-        rand_temp2[l] = rand4
-      }
-      else{
-        
-        while(rand4 %in% rand_temp2){
-          rand4 = as.integer(runif(n = 1,min = 1,max = dim(level2_data)[1]))
-          rand4 = rand4
-        }
-        
-        level2_data_strat = rbind(level2_data_strat,level2_data[rand4,])
-        level2_data = level2_data[-rand4,]
-        rand_temp2[l] = rand4
-      }
-    }
-
-  }
+  remove(data)
+  remove(data_sorted)
+  remove(level1_data)
+  remove(level2_data)
   
-  Strata_final_data = rbind(level1_data_strat,level2_data_strat)
-  Train_remain = Train
-    
-    for(f in 1:dim(Strata_final_data)[1]){
-      Train_remain = Train_remain[-Strata_final_data$PassengerId[i],]
-    }
-  data_full = list(Train_remain,Strata_final_data)
-
-  dimm = dim(Strata_final_data)
-  return(data_full)
-  level1_data_strat = NULL
-  level2_data_strat = NULL
-  level2_data = NULL
-  level1_data = NULL
+  return(Indexes_sample["uniqid"])
+  
+  # if(data_which == 1){
+  #   return(Total_people1_left)
+  # }else if(data_which == 2){
+  #   return(Total_sampleddata)
+  # }
+  
+  
 }
